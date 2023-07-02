@@ -1,0 +1,14 @@
+{
+  "[/ner1]": 30523,
+  "[/ner2]": 30525,
+  "[Association]": 30526,
+  "[Bind]": 30527,
+  "[Comparison]": 30528,
+  "[Conversion]": 30529,
+  "[Cotreatment]": 30530,
+  "[Drug_Interaction]": 30531,
+  "[Negative_Correlation]": 30532,
+  "[Positive_Correlation]": 30533,
+  "[ner1]": 30522,
+  "[ner2]": 30524
+}

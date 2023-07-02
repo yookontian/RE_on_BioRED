@@ -1,0 +1,21 @@
+{
+  "additional_special_tokens": [
+    "[ner1]",
+    "[/ner1]",
+    "[ner2]",
+    "[/ner2]",
+    "[Association]",
+    "[Bind]",
+    "[Comparison]",
+    "[Conversion]",
+    "[Cotreatment]",
+    "[Drug_Interaction]",
+    "[Negative_Correlation]",
+    "[Positive_Correlation]"
+  ],
+  "cls_token": "[CLS]",
+  "mask_token": "[MASK]",
+  "pad_token": "[PAD]",
+  "sep_token": "[SEP]",
+  "unk_token": "[UNK]"
+}
