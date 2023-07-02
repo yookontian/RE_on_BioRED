@@ -1,0 +1,38 @@
+{
+  "_name_or_path": "microsoft/biogpt",
+  "activation_dropout": 0.0,
+  "architectures": [
+    "BioGptForCausalLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "bos_token_id": 0,
+  "eos_token_id": 2,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 1024,
+  "initializer_range": 0.02,
+  "intermediate_size": 4096,
+  "layer_norm_eps": 1e-12,
+  "layerdrop": 0.0,
+  "max_position_embeddings": 1024,
+  "model_type": "biogpt",
+  "num_attention_heads": 16,
+  "num_hidden_layers": 24,
+  "pad_token_id": 1,
+  "quantization_config": {
+    "bnb_4bit_compute_dtype": "float32",
+    "bnb_4bit_quant_type": "fp4",
+    "bnb_4bit_use_double_quant": false,
+    "llm_int8_enable_fp32_cpu_offload": false,
+    "llm_int8_has_fp16_weight": false,
+    "llm_int8_skip_modules": null,
+    "llm_int8_threshold": 6.0,
+    "load_in_4bit": false,
+    "load_in_8bit": true
+  },
+  "scale_embedding": true,
+  "torch_dtype": "float16",
+  "transformers_version": "4.30.0.dev0",
+  "use_cache": false,
+  "vocab_size": 42388
+}

@@ -1,0 +1,13 @@
+{
+  "additional_special_tokens": [
+    "[learn1]",
+    "[learn2]",
+    "[learn3]",
+    "[learn4]"
+  ],
+  "bos_token": "<s>",
+  "eos_token": "</s>",
+  "pad_token": "<pad>",
+  "sep_token": "</s>",
+  "unk_token": "<unk>"
+}
