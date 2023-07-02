@@ -137,7 +137,6 @@ venv.bak/
 *.bin
 *.tar
 *.zip
-*.tsv
 
 
 
@@ -148,7 +147,7 @@ data/raw_Data/
 datasets/
 biored_novelty_model/
 biored_all_mul_model/
-
+NED_model_tokenizer/
 
 # Spyder project settings
 .spyderproject
