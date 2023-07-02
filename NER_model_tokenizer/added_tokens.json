@@ -1,0 +1,22 @@
+{
+  "[/ENTITY]": 30523,
+  "[/RELATION]": 30525,
+  "[B-Chemical]": 30539,
+  "[B-Disease]": 30538,
+  "[B-Gene]": 30537,
+  "[ENTITY]": 30522,
+  "[IN]": 30540,
+  "[OUT]": 30541,
+  "[RELATION1]": 30528,
+  "[RELATION2]": 30529,
+  "[RELATION3]": 30530,
+  "[RELATION4]": 30531,
+  "[RELATION5]": 30532,
+  "[RELATION6]": 30533,
+  "[RELATION7]": 30534,
+  "[RELATION8]": 30535,
+  "[RELATION9]": 30536,
+  "[RELATION]": 30524,
+  "[SRC]": 30526,
+  "[TGT]": 30527
+}

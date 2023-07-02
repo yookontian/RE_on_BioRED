@@ -1,0 +1,14 @@
+{
+  "additional_special_tokens": [
+    "[B-Gene]",
+    "[B-Disease]",
+    "[B-Chemical]",
+    "[IN]",
+    "[OUT]"
+  ],
+  "cls_token": "[CLS]",
+  "mask_token": "[MASK]",
+  "pad_token": "[PAD]",
+  "sep_token": "[SEP]",
+  "unk_token": "[UNK]"
+}
