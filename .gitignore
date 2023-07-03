@@ -149,6 +149,9 @@ biored_novelty_model/
 biored_all_mul_model/
 NED_model_tokenizer/
 
+# the file's name include "checkpoint"
+*checkpoint*
+
 # Spyder project settings
 .spyderproject
 .spyproject

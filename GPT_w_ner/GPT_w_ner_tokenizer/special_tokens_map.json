@@ -1,0 +1,26 @@
+{
+  "additional_special_tokens": [
+    "[entity1]",
+    "[entity2]",
+    "[learn1]",
+    "[learn2]",
+    "[learn3]",
+    "[learn4]",
+    "[learn5]",
+    "[learn6]",
+    "[None]",
+    "[Association]",
+    "[Bind]",
+    "[Comparison]",
+    "[Conversion]",
+    "[Cotreatment]",
+    "[Drug_Interaction]",
+    "[Negative_Correlation]",
+    "[Positive_Correlation]"
+  ],
+  "bos_token": "<s>",
+  "eos_token": "</s>",
+  "pad_token": "<pad>",
+  "sep_token": "</s>",
+  "unk_token": "<unk>"
+}
