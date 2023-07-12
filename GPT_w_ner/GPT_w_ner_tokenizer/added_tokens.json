@@ -1,19 +1,8 @@
 {
-  "[Association]": 42393,
-  "[Bind]": 42394,
-  "[Comparison]": 42395,
-  "[Conversion]": 42396,
-  "[Cotreatment]": 42397,
-  "[Drug_Interaction]": 42398,
-  "[Negative_Correlation]": 42399,
-  "[None]": 42392,
-  "[Positive_Correlation]": 42400,
-  "[entity1]": 42384,
-  "[entity2]": 42385,
-  "[learn1]": 42386,
-  "[learn2]": 42387,
-  "[learn3]": 42388,
-  "[learn4]": 42389,
-  "[learn5]": 42390,
-  "[learn6]": 42391
+  "[learn1]": 42384,
+  "[learn2]": 42385,
+  "[learn3]": 42386,
+  "[learn4]": 42387,
+  "[learn5]": 42388,
+  "[learn6]": 42389
 }
