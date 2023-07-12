@@ -50,7 +50,8 @@ def get_labels(mode='entity'):
 
 
     if mode == 'GPT_w_ner':
-        additional_tokens = {'additional_special_tokens': ['[entity1]', '[entity2]', '[learn1]', '[learn2]', '[learn3]', '[learn4]', '[learn5]', '[learn6]'] + ["[" + relation + "]" for relation in relations]}
+        # additional_tokens = {'additional_special_tokens': ['[entity1]', '[entity2]', '[learn1]', '[learn2]', '[learn3]', '[learn4]', '[learn5]', '[learn6]'] + ["[" + relation + "]" for relation in relations]}
+        additional_tokens = {'additional_special_tokens': ['[learn1]', '[learn2]', '[learn3]', '[learn4]', '[learn5]', '[learn6]']}
     id2label = {idx:label for idx, label in enumerate(labels)}
 
     label2id = {label:idx for idx, label in enumerate(labels)}

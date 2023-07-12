@@ -4,6 +4,7 @@ from relations import relations
 from transformers import AutoTokenizer, BertModel
 import torch
 from labels import get_labels
+import random
 
 def all_line_of_pmid(dataset, start=0):
     """Find all lines with the same pmid
@@ -640,7 +641,7 @@ def bert_w_ner_preprocess_function(examples, tokenizer, max_length=512, mode="be
 
 
 
-def make_GPT_re_data(file_path, lower=True, no_ner_input=False):
+def make_GPT_re_data(file_path, lower=True, no_ner_input=False, mode='default'):
     """make a dictionary for the dataset for GPT_re
     input is the .tsv file path
     return the hugging face dataset
@@ -652,70 +653,176 @@ def make_GPT_re_data(file_path, lower=True, no_ner_input=False):
     }
 
     """
+    if mode == "default":
+        """make a dictionary for the dataset for GPT_re
+        input is the .tsv file path
+        return the hugging face dataset
+        data_dict = {
+            "pmids": [],
+            "text": [],
+            "entities": [],
+            "outputs": [],
+            "relations": [] (lower)
+            }
 
-    data_dict = {
-        "pmids": [],
-        "text": [],
-        "entities": [],
-        "outputs": []
-    }
-    dropped = []
-    dataset = pd.read_csv(file_path, delimiter="\t", header=None)
+        """
 
-    # relations_dict = {relations[i]: f"[RELATION{i}]" for i in range(len(relations))}
+        data_dict = {
+            "pmids": [],
+            "text": [],
+            "entities": [],
+            "outputs": [],
+            "relation": []
+        }
+        dropped = []
+        dataset = pd.read_csv(file_path, delimiter="\t", header=None)
 
-    # tag_dict = {}
-    start = 0
-    while start < (len(dataset) - 1):
-        pmid, start, end = all_line_of_pmid(dataset, start)
-        # the text
-        text = get_original_text(dataset, start, end, lower)
+        # relations_dict = {relations[i]: f"[RELATION{i}]" for i in range(len(relations))}
 
-        pmid = dataset.iloc[start, 0]
+        # tag_dict = {}
+        start = 0
+        while start < (len(dataset) - 1):
+        # while start == 0:
+            pmid, start, end = all_line_of_pmid(dataset, start)
+            # the text
+            text = get_original_text(dataset, start, end, lower)
 
-        # for i in range(start, start + 1):
-        for i in range(start, end):
-            entity_line = ""
-            output_line = ""
-            # get entities and their identifiers of this line. the 1st item of entities is the src and the 2nd is the tgt
-            entities, entity_to_identifier = get_identifier_and_entity(dataset, i, i + 1, lower)
+            pmid = dataset.iloc[start, 0]
 
-            # reorder the entities, find the first occurred entity as the entity1
-            reordered_e1 = reorder_list(text, {list(entities.items())[0][0]:list(entities.items())[0][1]}, lower)
-            reordered_e2 = reorder_list(text, {list(entities.items())[1][0]:list(entities.items())[1][1]}, lower)
+            # for i in range(start, start + 1):
+            for i in range(start, end):
+                # get entities and their identifiers of this line. the 1st item of entities is the src and the 2nd is the tgt
+                entities, entity_to_identifier = get_identifier_and_entity(dataset, i, i + 1, lower)
+
+                # 1) reorder the entities, find the first occurred entity as the entity1
+                reordered_e1 = reorder_list(text, {list(entities.items())[0][0]:list(entities.items())[0][1]}, lower)
+                reordered_e2 = reorder_list(text, {list(entities.items())[1][0]:list(entities.items())[1][1]}, lower)
+                
+                # 2) find the first occurred entity as the entity1
+                
+
+                # get the output line
+                # if none
+                if dataset.iloc[i, 8] == "None":
+                    output_line = "the relation between the source entity 1 and the target entity 2 is None . "
+                else:
+                    try:
+                        # if entity_to_identifier[reordered_e1[0]]['identifier'] == dataset.iloc[i, 3]:
+                        if 'src' in dataset.iloc[i, 7].lower().split(reordered_e1[0])[0]:
+                            # entity1 is the source
+                            output_line = "the relation between source entity 1 and target entity 2 is " + dataset.iloc[i, 8] + " . "
+                            # print("e1 is src")
+                        elif 'tgt' in dataset.iloc[i, 7].lower().split(reordered_e1[0])[0]:
+                            # entity2 is the source
+                            output_line = "the relation between source entity 2 and target entity 1 is " + dataset.iloc[i, 8] + " . "
+                            # print("e1 is tgt")
+                    except:
+                        # if there is no such key of entity_to_identifier, drop this line
+                        dropped.append(i)
+                        continue
+
+                
+                # for strings in reordered_e1 and reordered_e2, if there is a space before or after a dot, delete the space
+                for i in range(len(reordered_e1)):
+                    new_string = ".".join(reordered_e1[i].split(" . "))
+                    new_string = ".".join(new_string.split(" ."))
+                    new_string = ".". join (new_string.split(". "))
+                    reordered_e1[i] = new_string
+
+                for i in range(len(reordered_e2)):
+                    new_string = ".".join(reordered_e2[i].split(" . "))
+                    new_string = ".".join(new_string.split(" ."))
+                    new_string = ".". join (new_string.split(". "))
+                    reordered_e2[i] = new_string
+
+
+                # get a string with the items in the reordered_e1, and split each item with ","
+                entity1 = " ; ".join(reordered_e1)
+                entity2 = " ; ".join(reordered_e2)
+                # get the entity line
+                entity_line = "entity 1 : " + entity1 + " . entity 2 : " + entity2 + " . "
+
+
+                data_dict["pmids"].append(str(pmid))
+                data_dict["text"].append(text.strip())
+                data_dict["entities"].append(entity_line.strip())
+                data_dict["outputs"].append(output_line.strip())
+                data_dict["relation"].append(dataset.iloc[i, 8].lower())
+
+            start = end
+
+        if dropped:
+            print(f"Dropped {len(dropped)} line:\n {dropped}")
+        return data_dict
+
+    if mode == "[]":
+        data_dict = {
+            "pmids": [],
+            "text": [],
+            "entities": [],
+            "outputs": []
+        }
+        dropped = []
+        dataset = pd.read_csv(file_path, delimiter="\t", header=None)
+
+        # relations_dict = {relations[i]: f"[RELATION{i}]" for i in range(len(relations))}
+
+        # tag_dict = {}
+        start = 0
+        while start < (len(dataset) - 1):
+            pmid, start, end = all_line_of_pmid(dataset, start)
+            # the text
+            text = get_original_text(dataset, start, end, lower)
+
+            pmid = dataset.iloc[start, 0]
+
+            # for i in range(start, start + 1):
+            for i in range(start, end):
+                entity_line = ""
+                output_line = ""
+                # get entities and their identifiers of this line. the 1st item of entities is the src and the 2nd is the tgt
+                entities, entity_to_identifier = get_identifier_and_entity(dataset, i, i + 1, lower)
+
+                # 1) reorder the entities, find the first occurred entity as the entity1
+                reordered_e1 = reorder_list(text, {list(entities.items())[0][0]:list(entities.items())[0][1]}, lower)
+                reordered_e2 = reorder_list(text, {list(entities.items())[1][0]:list(entities.items())[1][1]}, lower)
+                
+                # 2) find the first occurred entity as the entity1
+
+
+                # get a string with the items in the reordered_e1, and split each item with ","
+                entity1 = " ; ".join(reordered_e1)
+                entity2 = " ; ".join(reordered_e2)
+                # get the entity line
+                entity_line = "[entity1] : " + entity1 + " . [entity2] : " + entity2 + " . "
+
+                # get the output line
+                # if none
+                if dataset.iloc[i, 8] == "None":
+                    output_line = "the relation between source [entity1] and target [entity2] is [None] . "
+                else:
+                    try:
+                        if entity_to_identifier[reordered_e1[0]]['identifier'] == dataset.iloc[i, 3]:
+                            # entity1 is the source
+                            output_line = "the relation between source [entity1] and target [entity2] is [" + dataset.iloc[i, 8] + "] . "
+                        elif entity_to_identifier[reordered_e2[0]]['identifier'] == dataset.iloc[i, 3]:
+                            # entity2 is the source
+                            output_line = "the relation between source [entity2] and target [entity1] is [" + dataset.iloc[i, 8] + "] . "
+                    except:
+                        # if there is no such key of entity_to_identifier, drop this line
+                        dropped.append(i)
+                        continue
+                data_dict["pmids"].append(pmid)
+                data_dict["text"].append(text)
+                data_dict["entities"].append(entity_line)
+                data_dict["outputs"].append(output_line)
             
-            # get a string with the items in the reordered_e1, and split each item with ","
-            entity1 = " ; ".join(reordered_e1)
-            entity2 = " ; ".join(reordered_e2)
-            # get the entity line
-            entity_line = "[entity1] : " + entity1 + " . [entity2] : " + entity2 + " . "
+                
 
-            # get the output line
-            # if none
-            if dataset.iloc[i, 8] == "None":
-                output_line = "the relation between source [entity1] and target [entity2] is [None] . "
-            else:
-                try:
-                    if entity_to_identifier[reordered_e1[0]]['identifier'] == dataset.iloc[i, 3]:
-                        # entity1 is the source
-                        output_line = "the relation between source [entity1] and target [entity2] is [" + dataset.iloc[i, 8] + "] . "
-                    elif entity_to_identifier[reordered_e2[0]]['identifier'] == dataset.iloc[i, 3]:
-                        # entity2 is the source
-                        output_line = "the relation between source [entity2] and target [entity1] is [" + dataset.iloc[i, 8] + "] . "
-                except:
-                    # if there is no such key of entity_to_identifier, drop this line
-                    dropped.append(i)
-                    continue
-            data_dict["pmids"].append(pmid)
-            data_dict["text"].append(text)
-            data_dict["entities"].append(entity_line)
-            data_dict["outputs"].append(output_line)
-        
-            
+            start = end
+        print(f"Dropped {len(dropped)} line:\n {dropped}")
+        return(data_dict)
 
-        start = end
-    print(f"Dropped {len(dropped)} line:\n {dropped}")
-    return(data_dict)
 
 
 
@@ -734,7 +841,7 @@ def GPT_w_ner_preprocess_function(examples, tokenizer, max_length=1024, mode="gp
         for i, text_ids in enumerate(tokenized_texts):
             # when inferencing
             if infer:
-                output_ids = tokenizer.encode(batch_entities[i] + suffix, add_special_tokens=False)
+                output_ids = tokenizer.encode(batch_entities[i] + " " + suffix, add_special_tokens=False)
                 label = tokenizer.encode(batch_output[i], add_special_tokens=False)
                 # input_ids
                 if len(text_ids) + len(output_ids) + len(label)> max_length:
@@ -746,7 +853,7 @@ def GPT_w_ner_preprocess_function(examples, tokenizer, max_length=1024, mode="gp
                 labels.append(batch_output[i])
 
             else:
-                output_ids = tokenizer.encode(batch_entities[i] + suffix + batch_output[i] + tokenizer.eos_token, add_special_tokens=False)
+                output_ids = tokenizer.encode(batch_entities[i] + " " + suffix + " " + batch_output[i] + " " + tokenizer.eos_token, add_special_tokens=False)
                 # input_ids
                 if len(text_ids) + len(output_ids) > max_length:
                     truncated += 1
@@ -782,3 +889,184 @@ def GPT_w_ner_preprocess_function(examples, tokenizer, max_length=1024, mode="gp
             'attention_mask': attention_mask,
             
         })
+    
+
+def make_GPT_re_data_no_ner(file_path, random_seed, lower=True, ):
+    """make a dictionary for the dataset for GPT_re
+    input is the .tsv file path
+    return the hugging face dataset
+    data_dict = {
+        "pmids": [],
+        "text": [],
+        "relation": [],
+        "entities": [],
+        "outputs": []
+    }
+
+    """
+    random.seed(random_seed)
+    data_dict = {
+        "pmids": [],
+        "text": [],
+        "entities": [],
+        "outputs": [],
+        "relation": []
+    }
+    dropped = []
+    dataset = pd.read_csv(file_path, delimiter="\t", header=None)
+
+    # relations_dict = {relations[i]: f"[RELATION{i}]" for i in range(len(relations))}
+
+    # tag_dict = {}
+    start = 0
+    while start < (len(dataset) - 1):
+    # while start == 0:
+        pmid, start, end = all_line_of_pmid(dataset, start)
+        # the text
+        text = get_original_text(dataset, start, end, lower)
+
+        pmid = dataset.iloc[start, 0]
+        included_relations = {}
+        for i in range(start, end):
+            if dataset.iloc[i, 8] == "None":
+                continue
+            else:
+                included_relations[dataset.iloc[i, 8].lower()] = {
+                    'entities':[],
+                    'outputs':[],
+                    'output_lines':[]
+                }
+        
+        # entities_list: [(source, target), (source, target), ...)] 
+
+        # for i in range(start, start + 1):
+        for i in range(start, end):
+            if dataset.iloc[i, 8] == "None":
+                continue
+            # get entities and their identifiers of this line. the 1st item of entities is the src and the 2nd is the tgt
+            entities, entity_to_identifier = get_identifier_and_entity(dataset, i, i + 1, lower)
+
+            # 1) reorder the entities, find the first occurred entity as the entity1
+            reordered_e1 = reorder_list(text, {list(entities.items())[0][0]:list(entities.items())[0][1]}, lower, mode='length')
+            reordered_e2 = reorder_list(text, {list(entities.items())[1][0]:list(entities.items())[1][1]}, lower, mode='length')
+            if len(reordered_e1) == 0 or len(reordered_e2) == 0:
+                dropped.append(i)
+                continue
+            # for strings in reordered_e1 and reordered_e2, if there is a space before or after a dot, delete the space
+            for j in range(len(reordered_e1)):
+                new_string = ".".join(reordered_e1[j].split(" . "))
+                new_string = ".".join(new_string.split(" ."))
+                new_string = ".". join (new_string.split(". "))
+                reordered_e1[j] = new_string
+
+            for j in range(len(reordered_e2)):
+                new_string = ".".join(reordered_e2[j].split(" . "))
+                new_string = ".".join(new_string.split(" ."))
+                new_string = ".". join (new_string.split(". "))
+                reordered_e2[j] = new_string
+
+            if dataset.iloc[i, 3] == list(entities.keys())[0]:
+                # reordered_e1 is the source
+                output_line = f"the source is {reordered_e1[0]} and the target is {reordered_e2[0]}"
+                included_relations[dataset.iloc[i, 8].lower()]['outputs'].append(output_line)
+                included_relations[dataset.iloc[i, 8].lower()]['entities'].append((reordered_e1, reordered_e2))
+            elif dataset.iloc[i, 3] == list(entities.keys())[1]:
+                # reordered_e2 is the source
+                output_line = f"the source is {reordered_e2[0]} and the target is {reordered_e1[0]}"
+                included_relations[dataset.iloc[i, 8].lower()]['outputs'].append(output_line)
+                included_relations[dataset.iloc[i, 8].lower()]['entities'].append((reordered_e2, reordered_e1))
+            else:
+                dropped.append(i)
+                print("error in line: ", i)
+                continue
+
+        for r, v in included_relations.items():
+            data_dict["pmids"].append(str(pmid))
+            data_dict["text"].append(text.strip())
+            data_dict["relation"].append(r.lower().strip())
+            out_line = ""
+            for line in v['outputs']:
+                out_line += line.lower().strip() + " ; "
+            out_line = out_line[:-3] + " . "
+            data_dict["outputs"].append(out_line)
+            data_dict['entities'].append(v['entities'])
+        # randomly choosing a itwm that is in the relations and not in the included_relations.keys()
+        # have a random index in len(relations)
+        # if the index is in the included_relations.keys(), continue
+        # else, add the relation to the included_relations.keys()
+        random_index = random.randint(0, len(relations) - 1)
+        while relations[random_index].lower() in included_relations.keys() or relations[random_index].lower() == "none":
+            random_index = random.randint(0, len(relations) - 1)
+        
+        # add the relation to the included_relations.keys()
+        data_dict["pmids"].append(str(pmid))
+        data_dict["text"].append(text.strip())
+        data_dict["relation"].append(relations[random_index].lower().strip())
+        data_dict["outputs"].append("the source is none . ")
+        data_dict['entities'].append([(['none'], ['none'])])
+        start = end
+
+    if dropped:
+        print(f"Dropped {len(dropped)} line:\n {dropped}")
+
+    return data_dict
+
+
+
+def GPT_no_ner_preprocess_function(examples, tokenizer, max_length=1024, infer=False):
+    input_ids = []
+    attention_mask = []
+    labels = []
+    suffix = '[learn1] [learn2] [learn3] [learn4] [learn5] [learn6]'
+    batch_text = examples["text"]
+    batch_output = examples['outputs']
+    truncated = 0
+    tokenized_texts = tokenizer(batch_text, add_special_tokens=False)['input_ids']
+
+    for i, text_ids in enumerate(tokenized_texts):
+        # when inferencing
+        if infer:
+            output_ids = tokenizer.encode(f"for relation {examples['relation'][0]} ," + " " + suffix, add_special_tokens=False)
+            label = tokenizer.encode(batch_output[i], add_special_tokens=False)
+            # input_ids
+            if len(text_ids) + len(output_ids) + len(label)> max_length:
+                truncated += 1
+                # truncate the text_ids
+                tokenized_texts[i] = text_ids[:max_length - len(output_ids) - len(label)]
+
+            input_ids.append(tokenized_texts[i] + output_ids)
+            labels.append(batch_output[i])
+
+        else:
+            output_ids = tokenizer.encode(f"for relation {examples['relation'][0]} ," + " " + suffix + " " + batch_output[i] + " " + tokenizer.eos_token, add_special_tokens=False)
+            # input_ids
+            if len(text_ids) + len(output_ids) > max_length:
+                truncated += 1
+                # truncate the text_ids
+                tokenized_texts[i] = text_ids[:max_length - len(output_ids)]
+
+            # padding
+            padding_length = max_length - len(tokenized_texts[i]) - len(output_ids)
+
+            input_ids.append(tokenized_texts[i] + output_ids + ([tokenizer.pad_token_id] * padding_length))
+            attention_mask.append([1] * (max_length - padding_length) + ([0] * padding_length))
+            assert len(input_ids[i]) == max_length
+
+
+    if truncated > 0:
+        print(f"truncated {truncated} examples")
+
+
+    if infer:
+        return( {
+        'input_ids': input_ids,
+        'labels': labels,
+        })
+    else:
+
+        return( {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            
+        })
+    

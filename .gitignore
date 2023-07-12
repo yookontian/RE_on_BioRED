@@ -153,6 +153,9 @@ DocRED/
 # the file's name include "checkpoint"
 *checkpoint*
 
+# the file's name include "data"
+*data*
+
 # Spyder project settings
 .spyderproject
 .spyproject
