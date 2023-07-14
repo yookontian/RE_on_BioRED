@@ -641,7 +641,7 @@ def bert_w_ner_preprocess_function(examples, tokenizer, max_length=512, mode="be
 
 
 
-def make_GPT_re_data(file_path, lower=True, no_ner_input=False, mode='default'):
+def make_GPT_re_data(file_path, lower=True, mode='default'):
     """make a dictionary for the dataset for GPT_re
     input is the .tsv file path
     return the hugging face dataset
@@ -723,17 +723,18 @@ def make_GPT_re_data(file_path, lower=True, no_ner_input=False, mode='default'):
 
                 
                 # for strings in reordered_e1 and reordered_e2, if there is a space before or after a dot, delete the space
-                for i in range(len(reordered_e1)):
-                    new_string = ".".join(reordered_e1[i].split(" . "))
+                for j in range(len(reordered_e1)):
+                    new_string = ".".join(reordered_e1[j].split(" . "))
                     new_string = ".".join(new_string.split(" ."))
                     new_string = ".". join (new_string.split(". "))
-                    reordered_e1[i] = new_string
+                    reordered_e1[j] = new_string
 
-                for i in range(len(reordered_e2)):
-                    new_string = ".".join(reordered_e2[i].split(" . "))
+                for j in range(len(reordered_e2)):
+                    new_string = ".".join(reordered_e2[j].split(" . "))
                     new_string = ".".join(new_string.split(" ."))
                     new_string = ".". join (new_string.split(". "))
-                    reordered_e2[i] = new_string
+                    reordered_e2[j] = new_string
+
 
 
                 # get a string with the items in the reordered_e1, and split each item with ","
@@ -1029,10 +1030,10 @@ def GPT_no_ner_preprocess_function(examples, tokenizer, max_length=1024, infer=F
             output_ids = tokenizer.encode(f"for relation {examples['relation'][0]} ," + " " + suffix, add_special_tokens=False)
             label = tokenizer.encode(batch_output[i], add_special_tokens=False)
             # input_ids
-            if len(text_ids) + len(output_ids) + len(label)> max_length:
+            if len(text_ids) + len(output_ids) + len(label)> max_length - 100:
                 truncated += 1
                 # truncate the text_ids
-                tokenized_texts[i] = text_ids[:max_length - len(output_ids) - len(label)]
+                tokenized_texts[i] = text_ids[:max_length - 100 - len(output_ids) - len(label)]
 
             input_ids.append(tokenized_texts[i] + output_ids)
             labels.append(batch_output[i])
